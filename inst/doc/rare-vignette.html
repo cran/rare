@@ -90,6 +90,9 @@ img {
 .tabbed-pane {
   padding-top: 12px;
 }
+.html-widget {
+  margin-bottom: 20px;
+}
 button.code-folding-btn:focus {
   outline: none;
 }
@@ -156,7 +159,7 @@ A_{jk} = 1_{\{u_k\in ancestor(j)\cup \{j\}\}}.
 </div>
 <div id="a-data-example" class="section level2">
 <h2>A Data Example</h2>
-<p>To demonstrate the usage of <code>rare</code>, we use a review data set crawled from TripAdvisor.com (available at <a href="http://times.cs.uiuc.edu/~wang296/Data/" class="uri">http://times.cs.uiuc.edu/~wang296/Data/</a>) as an example. The original data set contains more than 200 thousands reviews and ratings. . For the sake of the demonstration, we randomly subset 500 reviews and 200 adjectives appearing in them from the data set. In each review, user provides a rating on the scale ranging from 1 star to 5 stars. We model the rating with a Gaussian linear model: <span class="math inline">\(y_i = \beta_0^* + \sum_{j=1}^pX_{ij}\beta_j^* + \epsilon_i\)</span> where <span class="math inline">\(y_i\)</span> is the rating for the <span class="math inline">\(i\)</span>th review, <span class="math inline">\(X_{ij}\)</span> counts the <span class="math inline">\(j\)</span>th adjective in the <span class="math inline">\(i\)</span>th review and <span class="math inline">\(\epsilon_i\sim N(0, \sigma^2)\)</span> i.i.d. for <span class="math inline">\(\sigma&gt;0\)</span>. We attach the sample data and a pre-trained hierarchical clustering tree to the package in <code>data.rating</code>, <code>data.dtm</code> and <code>data.hc</code>.</p>
+<p>To demonstrate the usage of <code>rare</code>, we use a review data set crawled from TripAdvisor.com (used in <a href="https://www.cs.virginia.edu/~hw5x/paper/rp166f-wang.pdf" class="uri">https://www.cs.virginia.edu/~hw5x/paper/rp166f-wang.pdf</a>) as an example. The original data set contains more than 200 thousands reviews and ratings. . For the sake of the demonstration, we randomly subset 500 reviews and 200 adjectives appearing in them from the data set. In each review, user provides a rating on the scale ranging from 1 star to 5 stars. We model the rating with a Gaussian linear model: <span class="math inline">\(y_i = \beta_0^* + \sum_{j=1}^pX_{ij}\beta_j^* + \epsilon_i\)</span> where <span class="math inline">\(y_i\)</span> is the rating for the <span class="math inline">\(i\)</span>th review, <span class="math inline">\(X_{ij}\)</span> counts the <span class="math inline">\(j\)</span>th adjective in the <span class="math inline">\(i\)</span>th review and <span class="math inline">\(\epsilon_i\sim N(0, \sigma^2)\)</span> i.i.d. for <span class="math inline">\(\sigma&gt;0\)</span>. We attach the sample data and a pre-trained hierarchical clustering tree to the package in <code>data.rating</code>, <code>data.dtm</code> and <code>data.hc</code>.</p>
 <pre class="r"><code>library(rare)
 library(Matrix)
 # Design matrix = document-term matrix
@@ -182,17 +185,7 @@ plot(as.dendrogram(data.hc))</code></pre>
 ts &lt;- sample(1:length(data.rating), 400) # Train set indices</code></pre>
 <p>We let the program to determine <span class="math inline">\(\lambda\)</span> sequence and <span class="math inline">\(\alpha\)</span> sequence, after setting length of sequences to be <code>nlam = 20</code> and <code>nalpha = 10</code>. We fit the model on the training set over the two-dimensional grid of regularization parameters <span class="math inline">\((\lambda, \alpha)\)</span>. The <code>rarefit</code> function implements the model fit alongside <span class="math inline">\(\alpha\)</span>, i.e., at each <span class="math inline">\(\alpha\)</span> the model is fitted over the entire sequence of <span class="math inline">\(\lambda\)</span> values.</p>
 <pre class="r"><code>ourfit &lt;- rarefit(y = data.rating[ts], X = data.dtm[ts, ], hc = data.hc, lam.min.ratio = 1e-6,
-                  nlam = 20, nalpha = 10, rho = 0.01, eps1 = 1e-5, eps2 = 1e-5, maxite = 1e4)
-#&gt; Finished model fits for alpha[1].
-#&gt; Finished model fits for alpha[2].
-#&gt; Finished model fits for alpha[3].
-#&gt; Finished model fits for alpha[4].
-#&gt; Finished model fits for alpha[5].
-#&gt; Finished model fits for alpha[6].
-#&gt; Finished model fits for alpha[7].
-#&gt; Finished model fits for alpha[8].
-#&gt; Finished model fits for alpha[9].
-#&gt; Finished model fits for alpha[10].</code></pre>
+                  nlam = 20, nalpha = 10, rho = 0.01, eps1 = 1e-5, eps2 = 1e-5, maxite = 1e4)</code></pre>
 <p><code>rarefit</code> provides various options for users to customize the fit. We introduce some commonly used options here and they can be specified in the <code>rarefit</code> function.</p>
 <ul>
 <li><p><code>A</code> is a <span class="math inline">\(p\)</span>-by-<span class="math inline">\(|\mathcal T|\)</span> binary matrix encoding ancestor-descendant relationships between leaves (<span class="math inline">\(\beta\)</span>) and tree nodes (<span class="math inline">\(\gamma\)</span>). If the tree <span class="math inline">\(\mathcal T\)</span> is not generated by <code>hclust</code>, user needs to provide <code>A</code> in a sparse matrix format (inherit from class <code>sparseMatrix</code> as in package <code>Matrix</code>). If <span class="math inline">\(\mathcal T\)</span> is generated by <code>hclust</code>, user can just provides the tree in <code>hc</code>.</p></li>
@@ -212,72 +205,7 @@ ts &lt;- sample(1:length(data.rating), 400) # Train set indices</code></pre>
 \]</span> An option that allows user to customize CV is <code>errtype</code>, a character string indicating the type of error function. Two error types are allowed: <code>errtype = &quot;mean-squared-error&quot;</code> or <code>errtype = &quot;mean-absolute-error&quot;</code>. The default value for K is <code>nfolds=5</code>.</p>
 <pre class="r"><code># Cross validation
 ourfit.cv &lt;- rarefit.cv(ourfit, y = data.rating[ts], X = data.dtm[ts, ],
-                        rho = 0.01, eps1 = 1e-5, eps2 = 1e-5, maxite = 1e4)
-#&gt; Finished model fits for alpha[1].
-#&gt; Finished model fits for alpha[2].
-#&gt; Finished model fits for alpha[3].
-#&gt; Finished model fits for alpha[4].
-#&gt; Finished model fits for alpha[5].
-#&gt; Finished model fits for alpha[6].
-#&gt; Finished model fits for alpha[7].
-#&gt; Finished model fits for alpha[8].
-#&gt; Finished model fits for alpha[9].
-#&gt; Finished model fits for alpha[10].
-#&gt; ##########################
-#&gt; Finished model fits for fold[1].
-#&gt; ##########################
-#&gt; Finished model fits for alpha[1].
-#&gt; Finished model fits for alpha[2].
-#&gt; Finished model fits for alpha[3].
-#&gt; Finished model fits for alpha[4].
-#&gt; Finished model fits for alpha[5].
-#&gt; Finished model fits for alpha[6].
-#&gt; Finished model fits for alpha[7].
-#&gt; Finished model fits for alpha[8].
-#&gt; Finished model fits for alpha[9].
-#&gt; Finished model fits for alpha[10].
-#&gt; ##########################
-#&gt; Finished model fits for fold[2].
-#&gt; ##########################
-#&gt; Finished model fits for alpha[1].
-#&gt; Finished model fits for alpha[2].
-#&gt; Finished model fits for alpha[3].
-#&gt; Finished model fits for alpha[4].
-#&gt; Finished model fits for alpha[5].
-#&gt; Finished model fits for alpha[6].
-#&gt; Finished model fits for alpha[7].
-#&gt; Finished model fits for alpha[8].
-#&gt; Finished model fits for alpha[9].
-#&gt; Finished model fits for alpha[10].
-#&gt; ##########################
-#&gt; Finished model fits for fold[3].
-#&gt; ##########################
-#&gt; Finished model fits for alpha[1].
-#&gt; Finished model fits for alpha[2].
-#&gt; Finished model fits for alpha[3].
-#&gt; Finished model fits for alpha[4].
-#&gt; Finished model fits for alpha[5].
-#&gt; Finished model fits for alpha[6].
-#&gt; Finished model fits for alpha[7].
-#&gt; Finished model fits for alpha[8].
-#&gt; Finished model fits for alpha[9].
-#&gt; Finished model fits for alpha[10].
-#&gt; ##########################
-#&gt; Finished model fits for fold[4].
-#&gt; ##########################
-#&gt; Finished model fits for alpha[1].
-#&gt; Finished model fits for alpha[2].
-#&gt; Finished model fits for alpha[3].
-#&gt; Finished model fits for alpha[4].
-#&gt; Finished model fits for alpha[5].
-#&gt; Finished model fits for alpha[6].
-#&gt; Finished model fits for alpha[7].
-#&gt; Finished model fits for alpha[8].
-#&gt; Finished model fits for alpha[9].
-#&gt; Finished model fits for alpha[10].
-#&gt; ##########################
-#&gt; Finished model fits for fold[5].
-#&gt; ##########################</code></pre>
+                        rho = 0.01, eps1 = 1e-5, eps2 = 1e-5, maxite = 1e4)</code></pre>
 <p>Note that CV are done on the same sequences of <span class="math inline">\(\lambda\)</span> and <span class="math inline">\(\alpha\)</span> from the previous model fit in <code>ourfit</code>.</p>
 <p><a id="prediction"></a></p>
 </div>
@@ -287,8 +215,7 @@ ourfit.cv &lt;- rarefit.cv(ourfit, y = data.rating[ts], X = data.dtm[ts, ],
 <pre class="r"><code># Prediction on test set
 pred &lt;- rarefit.predict(ourfit, ourfit.cv, data.dtm[-ts, ])
 pred.error &lt;- mean((pred - data.rating[-ts])^2)
-pred.error
-#&gt; [1] 1.660079</code></pre>
+pred.error</code></pre>
 <p>The predictions are made at <span class="math inline">\((\hat\beta_0({\hat\lambda}_{CV}, {\hat\alpha}_{CV}), \hat\beta({\hat\lambda}_{CV}, {\hat\alpha}_{CV}))\)</span>, i.e., estimated regression coefficients <span class="math inline">\((\hat\beta_0, \hat\beta)\)</span> from <code>ourfit</code> at the CV-chosen optimal <span class="math inline">\((\hat\lambda_{CV}, \hat\alpha_{CV})\)</span>.</p>
 <p><a id="visualization"></a></p>
 </div>
